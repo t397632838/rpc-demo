@@ -6,12 +6,12 @@
         <groupId>org.tangl</groupId>
         <artifactId>rpc-demo</artifactId>
         <version>1.0</version>
-        <!--		<relativePath/> &lt;!&ndash; lookup parent from repository &ndash;&gt;-->
+<!--        <relativePath/> &lt;!&ndash; lookup parent from repository &ndash;&gt;-->
     </parent>
     <groupId>com.tangl</groupId>
-    <artifactId>rpc-common</artifactId>
+    <artifactId>app-common</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>rpc-common</name>
+    <name>app-common</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
@@ -21,7 +21,7 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <dependency>
@@ -34,12 +34,6 @@
                     <artifactId>junit-vintage-engine</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.dyuproject.protostuff</groupId>
-            <artifactId>protostuff-core</artifactId>
-            <version>1.1.6</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 

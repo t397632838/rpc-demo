@@ -61,6 +61,11 @@ public class RpcDiscover {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
+    public static void main(String[] args) throws Exception {
+        System.out.println(new RpcDiscover("127.0.0.1:2181").discover());
+
+        System.in.read();
     }
 }

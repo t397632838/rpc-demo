@@ -45,4 +45,13 @@ public class RpcRegister {
         }
     }
 
+
+    public static void main(String[] args) throws Exception {
+        RpcRegister register = new RpcRegister();
+        register.setRegisterAddress("127.0.0.1:2181");
+        register.createNode("testNode");
+        System.in.read();
+    }
+
+
 }
