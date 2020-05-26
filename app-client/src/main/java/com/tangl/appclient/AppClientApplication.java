@@ -15,10 +15,13 @@ public class AppClientApplication {
 
 
     @Bean
-    public RpcProxy getProxy() {
-        return new RpcProxy();
+    public RpcProxy getProxy() throws Exception {
+        RpcProxy proxy = new RpcProxy();
+        proxy.setDiscover(getDiscover());
+        return proxy;
     }
 
+    @Bean
     public RpcDiscover getDiscover() throws Exception {
         RpcDiscover discover = new RpcDiscover("127.0.0.1:2181");
         return discover;

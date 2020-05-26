@@ -7,12 +7,13 @@ import com.tangl.rpccommon.RpcResponse;
 import com.tangl.rpcregister.RpcRegister;
 import com.tangl.rpcserver.annotation.RpcService;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,7 +77,7 @@ public class RpcServer implements ApplicationContextAware, InitializingBean {
             // 主机端口
             Integer port = Integer.valueOf(serverAddress.split(":")[1]);
             // 开启异步通信服务
-            ChannelFuture future = server.bind(host, port);
+            ChannelFuture future = server.bind(host, port).sync();
             System.out.println("服务器启动成功:" + future.channel().localAddress());
             rpcRegister.createNode(serverAddress);
             System.out.println("向zkServer注册服务地址信息");
@@ -102,5 +104,42 @@ public class RpcServer implements ApplicationContextAware, InitializingBean {
             }
         }
         System.out.println("服务器: " + serverAddress + " 提供的服务列表: " + serviceBeanMap);
+    }
+
+    public static void main(String[] args) throws Exception {
+        final ByteBuf buf = Unpooled.unreleasableBuffer(
+                Unpooled.copiedBuffer("Hi!\r\n", Charset.forName("UTF-8")));
+        EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        try {
+            ServerBootstrap b = new ServerBootstrap(); // (2)
+            b.group(bossGroup, workerGroup)// (3)
+                    .channel(NioServerSocketChannel.class) // (4)
+                    .handler(new LoggingHandler())    // (5)
+                    .childHandler(new ChannelInitializer<SocketChannel>() { // (6)
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {            //4
+                                @Override
+                                public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                    System.out.println("server" + msg);
+                                }
+                            });
+                        }
+                    })
+                    .option(ChannelOption.SO_BACKLOG, 128)          // (7)
+                    .childOption(ChannelOption.SO_KEEPALIVE, true); // (8)
+
+            // Bind and start to accept incoming connections.
+            ChannelFuture f = b.bind("127.0.0.1", 9090).sync(); // (9)
+
+            // Wait until the server socket is closed.
+            // In this example, this does not happen, but you can do that to gracefully
+            // shut down your server.
+            f.channel().closeFuture().sync();
+        } finally {
+            workerGroup.shutdownGracefully();
+            bossGroup.shutdownGracefully();
+        }
     }
 }

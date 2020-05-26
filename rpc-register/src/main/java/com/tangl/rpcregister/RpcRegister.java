@@ -36,7 +36,8 @@ public class RpcRegister {
                     // 如果不存在, 创建一个持久的节点目录
                     zooKeeper.create(Constant.REGISTRY_PATH, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
                 }
-                zooKeeper.create(Constant.DATA_PATH, data.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+                String dataPath = zooKeeper.create(Constant.DATA_PATH, data.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+                System.out.println("数据地址:"+dataPath);
             } catch (Exception e) {
                 e.printStackTrace();
             }

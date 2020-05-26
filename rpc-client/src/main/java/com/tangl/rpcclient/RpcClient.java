@@ -58,11 +58,11 @@ public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
                     }).option(ChannelOption.SO_KEEPALIVE, true);
             // 获取一个服务器地址
             String serverAddress = this.discover.discover();
-            String host = serverAddress.split(";")[0];
-            int port = Integer.valueOf(serverAddress.split(";")[1]);
+            String host = serverAddress.split(":")[0];
+            int port = Integer.valueOf(serverAddress.split(":")[1]);
             ChannelFuture future = client.connect(host, port).sync();
             System.out.println("客户端准备发送数据:" + request);
-            future.channel().writeAndFlush(request).channel();
+            future.channel().writeAndFlush(request).sync();
             synchronized (object) {
                 // 线程等待，等待客户端响应
                 object.wait();
@@ -81,5 +81,41 @@ public class RpcClient extends SimpleChannelInboundHandler<RpcResponse> {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         ctx.close();
+    }
+
+
+    public static void main(String[] args) throws Exception {
+
+        EventLoopGroup workerGroup = new NioEventLoopGroup(); // (1)
+
+        try {
+            Bootstrap b = new Bootstrap(); // (2)
+            b.group(workerGroup); // (3)
+            b.channel(NioSocketChannel.class); // (4)
+            b.option(ChannelOption.SO_KEEPALIVE, true); // (5)
+            b.handler(new ChannelInitializer<SocketChannel>() { // (6)
+                @Override
+                public void initChannel(SocketChannel ch) throws Exception {
+                    ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {            //4
+                        @Override
+                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+//                            ctx.writeAndFlush(buf.duplicate()).addListener(ChannelFutureListener.CLOSE);//5
+                            System.out.println("client"+ctx.read());
+                        }
+                    });
+                }
+            });
+
+            // Start the client.
+            ChannelFuture f = b.connect("127.0.0.1", 9090).sync(); // (7)
+
+            // Wait until the connection is closed.
+//            f.channel().closeFuture().sync();
+
+            f.channel().writeAndFlush("netty").channel();
+            f.channel().closeFuture().sync();
+        } finally {
+            workerGroup.shutdownGracefully();
+        }
     }
 }
